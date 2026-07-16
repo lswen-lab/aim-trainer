@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R6 Siege Aim Trainer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        #gameCanvas {
+            border: 3px solid #ff6b35;
+            background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%);
+            cursor: crosshair;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .stats-panel {
+            background: rgba(10, 14, 39, 0.9);
+            border: 2px solid #ff6b35;
+            padding: 20px;
+            border-radius: 5px;
+            width: 250px;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 16px;
+            border-bottom: 1px solid #ff6b3533;
+            padding-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #ff6b35;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .controls {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ff6b3533;
+        }
+
+        .control-item {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .control-item span {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #ff6b35;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #ff5522;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border: 3px solid #ff6b35;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            min-width: 350px;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-over h1 {
+            font-size: 32px;
+            color: #ff6b35;
+            margin-bottom: 20px;
+        }
+
+        .game-over .final-stats {
+            margin: 20px 0;
+            color: #aaa;
+        }
+
+        .game-over .final-stats div {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .final-stats .value {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .difficulty-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 8px;
+            background: rgba(255, 107, 53, 0.3);
+            border: 2px solid #ff6b35;
+            color: #ff6b35;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .difficulty-btn.active {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .difficulty-btn:hover {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .mode-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255, 107, 53, 0.3);
+            border: 2px solid #ff6b35;
+            color: #ff6b35;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .mode-btn.active {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .mode-btn:hover {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .timer {
+            font-size: 24px;
+            color: #ff6b35;
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .accuracy-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #ffaa35);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .info-box {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid #ff6b3550;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="gameCanvas" width="1024" height="768"></canvas>
+        <div class="stats-panel">
+            <h2 style="margin-bottom: 20px; color: #ff6b35;">SIEGE TRAINER</h2>
+            
+            <div class="mode-select">
+                <button class="mode-btn active" data-mode="classic">CLASSIC</button>
+                <button class="mode-btn" data-mode="reflex">REFLEX</button>
+            </div>
+
+            <div class="difficulty-select">
+                <button class="difficulty-btn active" data-difficulty="easy">EASY</button>
+                <button class="difficulty-btn" data-difficulty="normal">NORMAL</button>
+                <button class="difficulty-btn" data-difficulty="hard">HARD</button>
+            </div>
+
+            <div class="timer" id="timer">60s</div>
+
+            <div class="stat">
+                <span class="stat-label">Kills:</span>
+                <span class="stat-value" id="kills">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">Accuracy:</span>
+                <span class="stat-value" id="accuracy">100%</span>
+            </div>
+
+            <div class="accuracy-bar">
+                <div class="accuracy-fill" id="accuracyBar"></div>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">Shots Fired:</span>
+                <span class="stat-value" id="shots">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">Headshots:</span>
+                <span class="stat-value" id="headshots">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">KDA:</span>
+                <span class="stat-value" id="kda">0.00</span>
+            </div>
+
+            <div class="controls">
+                <h3 style="color: #ff6b35; margin-bottom: 15px;">CONTROLS</h3>
+                <div class="control-item"><span>W/A/S/D</span> - Move</div>
+                <div class="control-item"><span>SPACE</span> - Jump</div>
+                <div class="control-item"><span>MOUSE 1</span> - Shoot</div>
+                <div class="control-item"><span>SHIFT</span> - Sprint</div>
+                <div class="info-box">Move around and shoot the enemies. Practice your aim and movement!</div>
+            </div>
+
+            <button id="startBtn" onclick="game.start()">START GAME</button>
+            <button id="resetBtn" onclick="game.reset()" style="background: #666; margin-top: 5px;">RESET</button>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h1>ROUND COMPLETE</h1>
+        <div class="final-stats">
+            <div>Eliminations: <span class="value" id="finalKills">0</span></div>
+            <div>Accuracy: <span class="value" id="finalAccuracy">0%</span></div>
+            <div>Headshots: <span class="value" id="finalHeadshots">0</span></div>
+            <div>KDA: <span class="value" id="finalKDA">0.00</span></div>
+        </div>
+        <button onclick="game.start()" style="margin-top: 20px;">PLAY AGAIN</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
